@@ -4,7 +4,6 @@ from __future__ import annotations
 import hashlib
 import sys
 import time
-from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request
@@ -16,10 +15,8 @@ from config.settings import DEBUG, HOST, PORT
 from services import EvolutionAPI, SheetsClient
 
 
-Path("logs").mkdir(exist_ok=True)
 logger.remove()
 logger.add(sys.stderr, level="DEBUG" if DEBUG else "INFO")
-logger.add("logs/reportes_{time:YYYY-MM-DD}.log", rotation="1 day", retention="14 days", level="INFO")
 
 app = FastAPI(
     title="Chatbot de reportes ciudadanos de seguridad",
