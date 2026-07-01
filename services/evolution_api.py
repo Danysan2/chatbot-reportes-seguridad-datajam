@@ -24,23 +24,29 @@ class EvolutionAPI:
     def send_message(self, telefono: str, mensaje: str) -> bool:
         """Envía un mensaje de texto por WhatsApp."""
         url = f"{self.base_url}/message/sendText/{self.instance_name}"
-        
-        # El número ya viene con código de país desde WhatsApp remoteJid
-        # (ej: 573023373311 para Colombia, 15169744621 para US)
-        
-        payload = {
-            "number": telefono,
-            "text": mensaje
-        }
-        
-        try:
-            response = requests.post(url, json=payload, headers=self.headers, timeout=10)
-            response.raise_for_status()
-            logger.info("Mensaje de WhatsApp enviado")
-            return True
-        except requests.exceptions.RequestException as e:
-            logger.error("Error enviando mensaje de WhatsApp: {}", type(e).__name__)
-            return False
+
+        payloads = [
+            {"number": telefono, "textMessage": {"text": mensaje}},
+            {"number": telefono, "text": mensaje},
+        ]
+
+        for i, payload in enumerate(payloads):
+            try:
+                logger.debug("Intento {} POST {} payload={}", i + 1, url, payload)
+                response = requests.post(url, json=payload, headers=self.headers, timeout=10)
+                response.raise_for_status()
+                logger.info("Mensaje de WhatsApp enviado (formato {})", i + 1)
+                return True
+            except requests.exceptions.HTTPError as e:
+                logger.warning(
+                    "Intento {} falló: status={} body={}",
+                    i + 1, e.response.status_code, e.response.text[:500]
+                )
+            except requests.exceptions.RequestException as e:
+                logger.warning("Intento {} falló: {}", i + 1, type(e).__name__)
+
+        logger.error("No se pudo enviar mensaje de WhatsApp con ningún formato")
+        return False
     
     def get_instance_status(self) -> Optional[Dict[str, Any]]:
         """Obtiene el estado de la instancia."""
