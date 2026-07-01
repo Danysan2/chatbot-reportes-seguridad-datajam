@@ -92,11 +92,9 @@ async def process_webhook(data: dict[str, Any]) -> dict[str, str]:
         return {"status": "ignored"}
 
     remote_jid = str(key.get("remoteJid", ""))
-    remote_jid_alt = str(key.get("remoteJidAlt", ""))
-    if remote_jid.endswith("@g.us"):
+    if "@g.us" in remote_jid:
         return {"status": "ignored"}
-    reply_jid = remote_jid_alt if remote_jid_alt and "@s.whatsapp.net" in remote_jid_alt else remote_jid
-    phone = reply_jid.split("@")[0]
+    phone = remote_jid.replace("@s.whatsapp.net", "")
     incoming = _extract_message(payload.get("message") or {})
     if not phone or (not incoming.text and incoming.latitude is None):
         return {"status": "ignored"}
